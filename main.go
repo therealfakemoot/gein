@@ -11,38 +11,49 @@ import (
 var ntp = []string{"ntpd", "-q", "-g"}
 
 // Execute takes a series of strings as arguments, executes a command, and returns the string output and an error
-func Execute(args ...string) (string, error) {
+func Execute(args ...string) (string, string, error) {
 	cmdName := args[0]
 	cmdArgs := args[:1]
 
 	cmd := exec.Command(cmdName, cmdArgs...)
 
-	cmdReader, err := cmd.StdoutPipe()
+	outReader, err := cmd.StdoutPipe()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd", err)
-		os.Exit(1)
+		return "", "", nil
 	}
 
-	scanner := bufio.NewScanner(cmdReader)
+	errReader, err := cmd.StderrPipe()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error creating StdoutPipe for Cmd", err)
+		return "", "", nil
+	}
+
+	outScanner := bufio.NewScanner(outReader)
 	go func() {
-		for scanner.Scan() {
-			fmt.Printf("docker build out | %s\n", scanner.Text())
+		for outScanner.Scan() {
+		}
+	}()
+
+	errScanner := bufio.NewScanner(errReader)
+	go func() {
+		for errScanner.Scan() {
 		}
 	}()
 
 	err = cmd.Start()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
-		os.Exit(1)
+		return "", "", err
 	}
 
 	err = cmd.Wait()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
-		os.Exit(1)
+		return "", "", err
 	}
 
-	return scanner.Text(), err
+	return outScanner.Text(), errScanner.Text(), err
 }
 
 // Bootstrap performs the initial Gentoo Stage3 install.
@@ -66,8 +77,9 @@ func Bootstrap() {
 		os.Exit(1)
 	}
 
-	out, err := Execute("ntpd", "-q", "-q")
-	fmt.Println(out)
+	stdOut, stdErr, err := Execute("ntpd", "-q", "-q")
+	fmt.Println(stdOut)
+	fmt.Println(stdErr)
 
 	if err != nil {
 		fmt.Println(err)
