@@ -11,11 +11,14 @@ import (
 var ntp = []string{"ntpd", "-q", "-g"}
 
 // Execute takes a series of strings as arguments, executes a command, and returns the string output and an error
-func Execute(args ...string) (string, string, error) {
+func Execute(env []string, args ...string) (string, string, error) {
 	cmdName := args[0]
 	cmdArgs := args[:1]
 
 	cmd := exec.Command(cmdName, cmdArgs...)
+
+	newEnv := append(os.Environ(), env...)
+	cmd.Env = newEnv
 
 	outReader, err := cmd.StdoutPipe()
 	if err != nil {
