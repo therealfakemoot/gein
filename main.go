@@ -121,6 +121,32 @@ func Bootstrap() {
 		fmt.Println("WARNING: ntpd failed to synchronize.")
 	}
 
+	archEnv := []string{"S3_ARCH=amd64", "S3_DATE=20170727"}
+
+	wgetURL := fmt.Sprintf("http://distfiles.gentoo.org/releases/%s/autobuilds/%s/stage3-%s-nomultilib-%s.tar.bz2", S3Arch, S3Date)
+
+	wgetCmd := []string{"wget", wgetURL}
+
+	ExecuteP(archEnv, "WARNING: Install archive download failed. Aborting.", wgetCmd...)
+
+	tarCmd := []string{"tar", "xvjpf", "stage3-*.tar.bz2", "--xattrs", "--numeric-owner"}
+
+	// For now, I'm using ExecuteP here. During the second pass, this should be replaced with Execute(); we can inspect the error and perhaps re-download, re-extract, etc.
+	_execP("WARNING: Archive extraction failed. Aborting.", tarCmd...)
+
+	procMountCmd := []string{"mount", "-t", "proc", "/proc", "/mnt/gentoo/proc"}
+	_execP("WARNING: Mounting /proc to chroot failed. Aborting.", procMountCmd...)
+
+	procRbindCmd := []string{"mount", "--rbind", "/sys", "/mnt/gentoo/sys"}
+	_execP("WARNING: Mounting /proc to chroot failed. Aborting.", procRbindCmd...)
+
+	devMountCmd := []string{"mount", "--rbind", "/sys", "/mnt/gentoo/sys"}
+	_execP("WARNING: Rslave sys mounting failed.", devMountCmd...)
+
+	devRbindCmd := []string{"mount", "--make-rslave", "/mnt/gentoo/dev"}
+	_execP("WARNING: Mounting /proc to chroot failed. Aborting.", devRbindCmd...)
+
+	// swapfile := "/mnt/gentoo/swapfile"
 }
 
 // Minimal performs a basic installation of essentials: vim, ssh, tmux, etc.
