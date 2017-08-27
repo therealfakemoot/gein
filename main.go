@@ -89,6 +89,12 @@ func ExecutePWithEnv(e []string) func(msg string, args ...string) {
 
 // Bootstrap performs the initial Gentoo Stage3 install.
 func Bootstrap() {
+	const S3Arch = "amd64"
+	const S3Date = "20170727"
+
+	_exec := ExecuteWithEnv([]string{})
+	_execP := ExecutePWithEnv([]string{})
+
 	fmt.Println("Please partition and mount your disks before continuing!")
 	fmt.Println("Proceed with installation? [Y/N]: ")
 	var proceed string
@@ -108,13 +114,11 @@ func Bootstrap() {
 		os.Exit(1)
 	}
 
-	stdOut, stdErr, err := Execute("ntpd", "-q", "-q")
-	fmt.Println(stdOut)
-	fmt.Println(stdErr)
-
+	// TODO Is a correct time sync strictly necessary for install to succeed?
+	_, _, err := _exec("ntpd", "-q", "-q")
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		fmt.Println("WARNING: ntpd failed to synchronize.")
 	}
 
 }
