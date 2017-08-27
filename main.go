@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var ntp = []string{"ntpd", "-q", "-g"}
-
 // Execute takes a series of strings as arguments, executes a command, and returns the string output and an error
 func Execute(env []string, args ...string) (string, string, error) {
 	cmdName := args[0]
