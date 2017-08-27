@@ -57,6 +57,36 @@ func Execute(env []string, args ...string) (string, string, error) {
 	return outScanner.Text(), errScanner.Text(), err
 }
 
+// ExecuteP attempts to spawn an external process and panics with exit code 0.
+func ExecuteP(env []string, msg string, args ...string) {
+	var err error
+
+	_, _, err = Execute(env, args...)
+	if err != nil {
+		fmt.Println(err)
+		if len(msg) > 0 {
+			fmt.Println(msg)
+		}
+		os.Exit(1)
+	}
+
+}
+
+// ExecuteWithEnv returns a closure. This is a convenience function for setting up repeated calls using no or identical environments.
+func ExecuteWithEnv(e []string) func(args ...string) (string, string, error) {
+	return func(args ...string) (string, string, error) {
+		return Execute(e, args...)
+	}
+}
+
+// ExecutePWithEnv behaves as ExecuteWithEnv for the ExecuteP variant.
+func ExecutePWithEnv(e []string) func(msg string, args ...string) {
+	return func(msg string, args ...string) {
+		Execute(e, args...)
+	}
+
+}
+
 // Bootstrap performs the initial Gentoo Stage3 install.
 func Bootstrap() {
 	fmt.Println("Please partition and mount your disks before continuing!")
