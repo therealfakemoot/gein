@@ -169,6 +169,11 @@ func Bootstrap() {
 	fetchUseConfig := []string{"wget", "-O", "/mnt/gentoo/etc/portage/package.use", "https://raw.githubusercontent.com/jcmdln/gein/master/etc/portage/package.use"}
 	_execP("Failed to download package.use config file.", fetchUseConfig...)
 
+	os.MkdirAll("/mnt/gentoo/etc/portage/", 0655)
+	os.Link("/mnt/gentoo/usr/share/portage/config/repos.conf", "/mnt/gentoo/etc/portage/repos.conf/gentoo.conf")
+	os.Link("/etc/resolv.conf", "/mnt/gentoo/etc/resolv.conf")
+
+	// At this point, I'm not sure how to proceed; would chrooting even work while shelling out like this?
 }
 
 // Minimal performs a basic installation of essentials: vim, ssh, tmux, etc.
