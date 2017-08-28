@@ -146,7 +146,29 @@ func Bootstrap() {
 	devRbindCmd := []string{"mount", "--make-rslave", "/mnt/gentoo/dev"}
 	_execP("WARNING: Mounting /proc to chroot failed. Aborting.", devRbindCmd...)
 
-	// swapfile := "/mnt/gentoo/swapfile"
+	swapFile := "/mnt/gentoo/swapfile"
+
+	swapCmds := [][]string{
+		[]string{"mkswap", swapFile},
+		[]string{"chmod", "0600", swapFile},
+		[]string{"swapon", swapFile},
+	}
+
+	if _, err := os.Stat(swapFile); os.IsNotExist(err) {
+		makeSwapCmd := []string{"fallocate", "-l", "2G", swapFile}
+		_execP("Creating swapfile failed.", makeSwapCmd...)
+	}
+
+	for _, cmd := range swapCmds {
+		_execP("Activating swap failed.", cmd...)
+	}
+
+	fetchMakeConfig := []string{"wget", "-O", "/mnt/gentoo/etc/portage/make.conf", "https://raw.githubusercontent.com/jcmdln/gein/master/etc/portage/make.conf"}
+	_execP("Failed to download make config file.", fetchMakeConfig...)
+
+	fetchUseConfig := []string{"wget", "-O", "/mnt/gentoo/etc/portage/package.use", "https://raw.githubusercontent.com/jcmdln/gein/master/etc/portage/package.use"}
+	_execP("Failed to download package.use config file.", fetchUseConfig...)
+
 }
 
 // Minimal performs a basic installation of essentials: vim, ssh, tmux, etc.
